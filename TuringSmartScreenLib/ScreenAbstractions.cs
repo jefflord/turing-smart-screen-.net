@@ -3,9 +3,7 @@ namespace TuringSmartScreenLib;
 internal abstract class ScreenBase : IScreen
 {
     private readonly int width;
-
     private readonly int height;
-
     private ScreenOrientation orientation = ScreenOrientation.Portrait;
 
     public int Width
@@ -43,6 +41,8 @@ internal abstract class ScreenBase : IScreen
             }
         }
     }
+
+    public ScreenType Type { get; set; } = ScreenType.RevisionB;
 
     protected ScreenBase(int width, int height)
     {

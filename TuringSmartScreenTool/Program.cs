@@ -1,6 +1,6 @@
 using System.CommandLine;
 using System.CommandLine.NamingConventionBinder;
-
+using System.Diagnostics;
 using SkiaSharp;
 
 using TuringSmartScreenLib;
@@ -116,10 +116,19 @@ fillCommand.AddOption(new Option<string>(new[] { "--color", "-c" }, static () =>
 fillCommand.Handler = CommandHandler.Create((string revision, string port, string color) =>
 {
     var c = SKColor.Parse(color);
-
     // TODO fix size & orientation ?
     using var screen = ScreenFactory.Create(GetScreenType(revision), port);
-    var buffer = screen.CreateBuffer(480, 320);
+
+    IScreenBuffer buffer;
+    if (screen.Type == ScreenType.RevisionA)
+    {
+        buffer = screen.CreateBuffer(320, 480);
+    }
+    else
+    {
+        buffer = screen.CreateBuffer(480, 320);
+    }
+
     buffer.Clear(c.Red, c.Green, c.Blue);
     screen.DisplayBuffer(buffer);
 });
@@ -133,10 +142,18 @@ textCommand.AddOption(new Option<int>(new[] { "-y" }, static () => 0, "Position 
 textCommand.AddOption(new Option<int>(new[] { "--size", "-s" }, static () => 0, "Size"));
 textCommand.AddOption(new Option<string>(new[] { "--font", "-f" }, static () => string.Empty, "Font"));
 textCommand.AddOption(new Option<string>(new[] { "--color", "-c" }, static () => "FFFFFF", "Color"));
+textCommand.AddOption(new Option<string>(new[] { "--align", "-a" }, static () => "left", "Align"));
 textCommand.AddOption(new Option<string>(new[] { "--background", "-b" }, static () => "000000", "Color"));
-textCommand.Handler = CommandHandler.Create((string revision, string port, string text, int x, int y, int size, string font, string color, string background) =>
+textCommand.Handler = CommandHandler.Create((string revision, string port, string text, string align, int x, int y, int size, string font, string color, string background) =>
 {
+
+    var sw = Stopwatch.StartNew();
+    using var screen = ScreenFactory.Create(GetScreenType(revision), port);
+
+    sw.Restart();
+
     using var paint = new SKPaint();
+    var rect = default(SKRect);
     paint.IsAntialias = true;
     if (size > 0)
     {
@@ -148,19 +165,33 @@ textCommand.Handler = CommandHandler.Create((string revision, string port, strin
     }
     paint.Color = SKColor.Parse(color);
 
-    var rect = default(SKRect);
     paint.MeasureText(text, ref rect);
 
-    using var bitmap = new SKBitmap((int)Math.Floor(rect.Width), (int)Math.Floor(rect.Height));
+    using var bitmap = new SKBitmap((int)Math.Floor(rect.Width) + 10, (int)Math.Floor(rect.Height));
+
     using var canvas = new SKCanvas(bitmap);
+
+    //canvas.RotateDegrees(90, bitmap.Width / 2, bitmap.Height / 2);
+
     canvas.Clear(SKColor.Parse(background));
     canvas.DrawText(text, 0, rect.Height, paint);
+
     canvas.Flush();
 
-    using var screen = ScreenFactory.Create(GetScreenType(revision), port);
     var buffer = screen.CreateBuffer(bitmap.Width, bitmap.Height);
     buffer.ReadFrom(bitmap);
-    screen.DisplayBuffer(x, y, buffer);
+
+    if (align == "left")
+    {
+        screen.DisplayBuffer(x, y, buffer);
+    }
+    else
+    {
+        screen.DisplayBuffer((screen.Width - (int)Math.Floor(rect.Width) - 10) - x, y, buffer);
+    }
+
+    sw.Stop();
+
 });
 rootCommand.Add(textCommand);
 

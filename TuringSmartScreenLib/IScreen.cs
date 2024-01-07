@@ -2,6 +2,7 @@ namespace TuringSmartScreenLib;
 
 public interface IScreen : IDisposable
 {
+    ScreenType Type { get; set; }
     int Width { get; }
 
     int Height { get; }
