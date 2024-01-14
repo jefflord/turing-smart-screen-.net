@@ -124,7 +124,6 @@ public sealed class TuringSmartScreenRevisionA : IDisposable
 
     public void Clear()
     {
-        Debugger.Launch();
         SetOrientation(Orientation.Portrait, 320, 480);
         WriteCommand(102);
     }
