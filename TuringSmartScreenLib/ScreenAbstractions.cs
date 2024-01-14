@@ -6,6 +6,8 @@ internal abstract class ScreenBase : IScreen
     private readonly int height;
     private ScreenOrientation orientation = ScreenOrientation.Portrait;
 
+
+
     public int Width
     {
         get
@@ -50,6 +52,8 @@ internal abstract class ScreenBase : IScreen
         this.height = height;
     }
 
+    public abstract void WriteCommandRaw(byte command);
+
     protected abstract bool SetOrientation(ScreenOrientation orientation);
 
     public abstract void Dispose();
@@ -77,6 +81,11 @@ internal sealed class ScreenWrapperRevisionA : ScreenBase
         : base(width, height)
     {
         this.screen = screen;
+    }
+
+    public override void WriteCommandRaw(byte command)
+    {
+        screen.WriteCommandRaw(command);
     }
 
     public override void Dispose() => screen.Dispose();
@@ -128,6 +137,11 @@ internal abstract class ScreenWrapperRevisionB : ScreenBase
     }
 
     public override void Dispose() => screen.Dispose();
+
+    public override void WriteCommandRaw(byte command)
+    {
+        screen.WriteCommandRaw(command);
+    }
 
     public override void Reset()
     {
@@ -199,6 +213,7 @@ internal sealed class ScreenWrapperRevisionB1 : ScreenWrapperRevisionB
     }
 
     protected override byte CalcBrightness(byte value) => (byte)((float)value / 100 * 255);
+
 }
 
 internal sealed class ScreenWrapperC : ScreenBase
@@ -209,6 +224,11 @@ internal sealed class ScreenWrapperC : ScreenBase
         : base(width, height)
     {
         this.screen = screen;
+    }
+
+    public override void WriteCommandRaw(byte command)
+    {
+        screen.WriteCommandRaw(command);
     }
 
     public override void Dispose() => screen.Dispose();

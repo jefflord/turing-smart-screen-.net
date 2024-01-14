@@ -118,4 +118,14 @@ public sealed class TuringSmartScreenRevisionB : IDisposable
 
     public void DisplayBitmap(int x, int y, int width, int height, byte[] bitmap) =>
         WriteCommand(0xCC, x, y, width, height, bitmap);
+    public void WriteCommandRaw(byte command)
+    {
+        const int commandLength = 6;
+        using var buffer = new ByteBuffer(commandLength);
+        var span = buffer.GetSpan();
+        span[5] = command;
+        buffer.Advance(commandLength);
+
+        port.Write(buffer.Buffer, 0, buffer.WrittenCount);
+    }
 }

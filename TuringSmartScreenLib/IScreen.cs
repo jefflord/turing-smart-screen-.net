@@ -11,6 +11,8 @@ public interface IScreen : IDisposable
 
     void Reset();
 
+    void WriteCommandRaw(byte command);
+
     void Clear();
 
     void ScreenOff();

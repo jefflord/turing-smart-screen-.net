@@ -1,5 +1,6 @@
 namespace TuringSmartScreenLib;
 
+using System.Diagnostics;
 using System.IO.Ports;
 
 public sealed class TuringSmartScreenRevisionA : IDisposable
@@ -46,6 +47,17 @@ public sealed class TuringSmartScreenRevisionA : IDisposable
         {
             port.Close();
         }
+    }
+
+    public void WriteCommandRaw(byte command)
+    {
+        const int commandLength = 6;
+        using var buffer = new ByteBuffer(commandLength);
+        var span = buffer.GetSpan();
+        span[5] = command;
+        buffer.Advance(commandLength);
+
+        port.Write(buffer.Buffer, 0, buffer.WrittenCount);
     }
 
     private void WriteCommand(byte command)
@@ -110,7 +122,12 @@ public sealed class TuringSmartScreenRevisionA : IDisposable
 
     public void Reset() => WriteCommand(101);
 
-    public void Clear() => WriteCommand(102);
+    public void Clear()
+    {
+        Debugger.Launch();
+        SetOrientation(Orientation.Portrait, 320, 480);
+        WriteCommand(102);
+    }
 
     public void ScreenOff() => WriteCommand(108);
 

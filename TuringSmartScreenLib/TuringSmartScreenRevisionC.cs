@@ -302,4 +302,16 @@ public sealed class TuringSmartScreenRevisionC : IDisposable
         WriteCommand(cmd);
         WriteCommand(data);
     }
+
+    public void WriteCommandRaw(byte command)
+    {
+        const int commandLength = 6;
+        using var buffer = new ByteBuffer(commandLength);
+        var span = buffer.GetSpan();
+        span[5] = command;
+        buffer.Advance(commandLength);
+
+        port.Write(buffer.Buffer, 0, buffer.WrittenCount);
+    }
+
 }
