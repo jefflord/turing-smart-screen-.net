@@ -231,6 +231,14 @@ textCommand.Handler = CommandHandler.Create((string revision, string port, strin
         //    screen.DisplayBuffer((screen.Width - (int)Math.Floor(rect.Width) - 10) - x, y, buffer);
         //}
     }
+    else if (align == "drawbg")
+    {
+        for (var i = 0; i < 999; i++)
+        {
+            DrawOnBg(revision, port, text, x, y, size, color);
+        }
+
+    }
     else if (align == "rigxxxhtxx")
     {
         var sw = Stopwatch.StartNew();
@@ -281,9 +289,9 @@ textCommand.Handler = CommandHandler.Create((string revision, string port, strin
             try
             {
                 Thread.Sleep(100);
-                x = 310;
+                x = 0;
                 y = 0;
-                align = "right";
+                align = "left";
 
                 Do90Test(revision, port, text, align, x, y, size, font, color, background);
             }
@@ -301,7 +309,6 @@ textCommand.Handler = CommandHandler.Create((string revision, string port, strin
 
     static void Do90Test(string revision, string port, string text, string align, int x, int y, int size, string font, string color, string background)
     {
-
 
         text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         var rand = new Random();
@@ -329,10 +336,11 @@ textCommand.Handler = CommandHandler.Create((string revision, string port, strin
 
             paint.Color = SKColor.Parse(color);
             paint.MeasureText(text, ref rect);
-
+            paint.IsAntialias = true;
 
 
             IScreenBuffer buffer;
+            if (!false)
             {
                 var c = SKColor.Parse("FFFF4F");
                 // TODO fix size & orientation ?
@@ -360,6 +368,12 @@ textCommand.Handler = CommandHandler.Create((string revision, string port, strin
             canvas.RotateDegrees(90, 0, 0);
 
             canvas.Clear(SKColor.Parse(background));
+
+            //canvas.Clear(SKColors.Transparent);
+            //canvas.Clear(SKColors.Violet);
+            //canvas.Clear(SKColors.Yellow);
+
+
             //canvas.DrawText(text, 0, rect.Height, paint);
 
 
@@ -406,6 +420,41 @@ textCommand.Handler = CommandHandler.Create((string revision, string port, strin
             buffer.Dispose();
         }
 
+    }
+
+    static void DrawOnBg(string revision, string port, string text, int x, int y, int size, string color)
+    {
+        text = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        var rand = new Random();
+        var nextSize = rand.Next(3, 9);
+
+        size += 10;
+        text = $"{nextSize}:{text.Substring(0, nextSize)}";
+
+
+        using var screen = ScreenFactory.Create(GetScreenType(revision), port);
+        using var backgroundBitmap = SKBitmap.Decode(File.OpenRead(@"C:\Users\jeff\Downloads\35inchENG\3.5\back1.png"));
+        var shader = backgroundBitmap.ToShader(SKShaderTileMode.Repeat, SKShaderTileMode.Repeat);
+        var canvas = new SKCanvas(backgroundBitmap);
+        //paint.BlendMode = SKBlendMode.DstIn;
+        canvas.DrawBitmap(backgroundBitmap, new SKRect(0, 0, backgroundBitmap.Width, backgroundBitmap.Height));
+        canvas.Flush();
+
+
+        using var paint = new SKPaint();
+        var rect = default(SKRect);
+        paint.IsAntialias = true;
+        paint.TextSize = size;
+        paint.Color = SKColor.Parse(color);
+        paint.MeasureText(text, ref rect);
+        canvas.DrawText(text, 50, rect.Height + 50, paint);
+        canvas.Flush();
+
+
+
+        using var buffer = screen.CreateBuffer(backgroundBitmap.Width, backgroundBitmap.Height);
+        buffer.ReadFrom(backgroundBitmap);
+        screen.DisplayBuffer(x, y, buffer);
     }
 });
 rootCommand.Add(textCommand);
